@@ -469,18 +469,17 @@ readHeadsbinAtPnts <- function(filPtr, SP_rng, PointVector) {
     if (length(HeaderRead) > 0) {
       if (is.element(HeaderRead$KPER, SP_rng) &&
           HeaderRead$KPER <= max(SP_rng)) {
-        i <- i + 1
         HeadBlock <- readBin(filPtr, double(), n = Lay1floats, size = 4)
         bigVector <- c(bigVector, HeadBlock[1:Lay1floats])
         if (HeaderRead$K == M$nlays){
           HeadsMatrix<- array(bigVector,c(M$ncols,M$nrows,M$nlays))
+          bigVector <-NULL
           df1SP <-as.data.frame(HeadsMatrix[PointVector])
           names(df1SP)<-c("Head")
           df1SP$SP <- HeaderRead$KPER
           listOfPnts <- rbind(listOfPnts,df1SP)
         }
       } else {
-
         seek(filPtr, (Lay1floats * 4), origin = 'current')
       }
     }
