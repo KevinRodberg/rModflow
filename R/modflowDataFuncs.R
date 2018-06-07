@@ -467,12 +467,8 @@ readHeadsbinAtPnts <- function(filPtr, SP_rng, PointVector) {
     HeaderRead <- readHeadsHeader(filPtr)
     # Don't read past EOF
     if (length(HeaderRead) > 0) {
-<<<<<<< HEAD
       if (is.element(HeaderRead$KPER, SP_rng) && HeaderRead$KPER <= max(SP_rng)) {
-=======
-      if (is.element(HeaderRead$KPER, SP_rng) &&
-          HeaderRead$KPER <= max(SP_rng)) {
->>>>>>> c7ed571f8e70b88589489ac46eccdd617e6ecb91
+
         HeadBlock <- readBin(filPtr, double(), n = Lay1floats, size = 4)
         # append each layer to bigVector
         bigVector <- c(bigVector, HeadBlock[1:Lay1floats])
