@@ -467,20 +467,24 @@ readHeadsbinAtPnts <- function(filPtr, SP_rng, PointVector) {
     HeaderRead <- readHeadsHeader(filPtr)
     # Don't read past EOF
     if (length(HeaderRead) > 0) {
-      if (is.element(HeaderRead$KPER, SP_rng) &&
-          HeaderRead$KPER <= max(SP_rng)) {
-        i <- i + 1
+      if (is.element(HeaderRead$KPER, SP_rng) && HeaderRead$KPER <= max(SP_rng)) {
         HeadBlock <- readBin(filPtr, double(), n = Lay1floats, size = 4)
+        # append each layer to bigVector
         bigVector <- c(bigVector, HeadBlock[1:Lay1floats])
+
+        # Reformat bigVector as 3D array using col, row, lay dimensions
+        # create dataframe of Head values for this stress period
+        # and append them (rbind) to listofPnts
+        # with the current stress period (SP)
         if (HeaderRead$K == M$nlays){
           HeadsMatrix<- array(bigVector,c(M$ncols,M$nrows,M$nlays))
+          bigVector <-NULL
           df1SP <-as.data.frame(HeadsMatrix[PointVector])
           names(df1SP)<-c("Head")
           df1SP$SP <- HeaderRead$KPER
           listOfPnts <- rbind(listOfPnts,df1SP)
         }
       } else {
-
         seek(filPtr, (Lay1floats * 4), origin = 'current')
       }
     }
@@ -519,6 +523,7 @@ chooseBudgetTerms <- function(CBCterms) {
   rBtnVal1 = tclVar(trimws(CBCterms[[1]]))
   rBtnVal2 = tclVar(trimws(CBCterms[[1]]))
 
+  # create 2 columns of CBCterms radioButtons
   btns.f1 = vector()
   for (num in seq(1, length(CBCterms))) {
     btn <- tk2radiobutton(frame1)
