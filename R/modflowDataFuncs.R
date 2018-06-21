@@ -78,6 +78,38 @@ chooseModel <- function() {
   return((tclvalue(rBtnVal)))
 }
 
+#' @title Read Model Mesh Points
+#' @description \code{defineMFmodel} Reads arcGIS shape file of model mesh
+#'    -Converts mesh polygons to points referencing the center of the model cells
+#'    -Changes spatial reference if necessary
+#'    -Converts point coordinates into a data frame
+#' @return MFmodel.Params Data.frame providing model characteristics
+#' @export
+#' @examples
+#'      ModelGridCoords<-readgridPoints(Modelgrd.Path,Model.Shape)
+#'
+#'      ---Using futures:
+#'      g <- future({readgridPoints(Modelgrd.Path,Model.Shape)})
+#'      ModelGridCoords <-future::value(g)
+
+readgridPoints<- function(Modelgrd.Path,Model.Shape){
+  Modelgrd %<-% rgdal::readOGR(Modelgrd.Path,Model.Shape)
+  modCol <- grep("^col$",colnames(Modelgrd@data),ignore.case=T)
+  modRow <- grep("^row$",colnames(Modelgrd@data),ignore.case=T)
+  gridCentroids <- rgeos::gCentroid(Modelgrd,byid=TRUE)
+  print(sp::proj4string(Modelgrd))
+  if (!raster::compareCRS(HARNSP17ft,sp::proj4string(Modelgrd))) {
+    gridCentroids <- sp::spTransform(gridCentroids,HARNSP17ft)
+  }
+
+  # Convert model cell points to a dataframe
+  asSFGC <- sf::st_as_sf(gridCentroids)
+  ModelGridCoords <- do.call(base::rbind,sf::st_geometry(asSFGC))
+  ModelGridCoords <-base::cbind(Modelgrd@data[,modRow], Modelgrd@data[,modCol],ModelGridCoords)
+
+  return(ModelGridCoords)
+}
+
 
 #' @title Define Plot options
 #' @description \code{definePlotOpts} provides radio and checkboxes for Ploting options
