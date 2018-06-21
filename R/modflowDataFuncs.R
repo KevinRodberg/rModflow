@@ -83,7 +83,7 @@ chooseModel <- function() {
 #'    -Converts mesh polygons to points referencing the center of the model cells
 #'    -Changes spatial reference if necessary
 #'    -Converts point coordinates into a data frame
-#' @return MFmodel.Params Data.frame providing model characteristics
+#' @return ModelGridCoords Data.frame providing model row, column and coordinates
 #' @export
 #' @examples
 #'      ModelGridCoords<-readgridPoints(Modelgrd.Path,Model.Shape)
