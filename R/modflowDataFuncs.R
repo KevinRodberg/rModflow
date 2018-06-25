@@ -30,11 +30,26 @@ defineMFmodel <- function() {
   return(MFmodel.Params)
 }
 
+#' @title Exit Function
+#' @description \code{exit} Provides Function to exit a little more nicely
+#' @return \code{model} name from vector of available models in MFModels
+#' @export
+#' @examples
+
+exit <- function(msg){
+  cat(paste0("*** ERROR ***: ", msg))
+  closeAllConnections()
+  .Internal(.invokeRestart(list(NULL, NULL), NULL))
+  options(warn=0)
+
+}
+
 #' @title Choose Modflow Model
 #' @description \code{chooseModel} Provides Radio button choices of available Modflow models.
 #'      The implementation is capable of a variable number of radioButtons
 #'      depending on length of MFModels vector via a loop
 #' @return \code{model} name from vector of available models in MFModels
+#' @import tcltk2
 #' @export
 #' @examples
 #'      MFmodel.Params <- defineMFmodel()
@@ -42,7 +57,19 @@ defineMFmodel <- function() {
 #'      M <- as.data.frame(MFmodel.Params[model,])
 
 chooseModel <- function() {
+  library(tcltk2)
   fontHeading <- tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
+  done <- tclVar(0)
+
+  #===============================================
+  #  define ok and Cancel functions for tcl buttons
+  #  and stadardize some tcl vars
+  #===============================================
+  fnOK <- function() {
+    tclvalue(done) <- 1}
+
+  fnCncl <- function() {
+    tclvalue(done) <- 2}
 
   win1 <- tktoplevel()
   tkraise(win1)
