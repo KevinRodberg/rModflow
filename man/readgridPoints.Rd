@@ -7,7 +7,7 @@
 readgridPoints(Modelgrd.Path, Model.Shape)
 }
 \value{
-MFmodel.Params Data.frame providing model characteristics
+ModelGridCoords Data.frame providing model row, column and coordinates
 }
 \description{
 \code{defineMFmodel} Reads arcGIS shape file of model mesh

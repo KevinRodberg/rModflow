@@ -451,8 +451,8 @@ readCBCbinByTerm <- function(filPtr, term, SP_rng, lay) {
   return(bigVector)
 }
 
-#' @title Read Heads by Layer
-#' @description \code{readHeadsbin} searchs for a Modflow binary Heads Layer
+#' @title Read Heads by Stress Period
+#' @description \code{readHeadsbin} searchs for a Modflow binary Heads Layers
 #'      and returns a vector of values by stress periods
 #'      identified in range of values
 #' @param filPtr, SP_rng [stress period range]
@@ -477,6 +477,55 @@ readHeadsbin <- function(filPtr, SP_rng) {
     if (length(HeaderRead) > 0) {
       if (is.element(HeaderRead$KPER, SP_rng) &&
           HeaderRead$KPER <= max(SP_rng)) {
+        i <- i + 1
+        HeadBlock <-
+          readBin(filPtr, double(), n = Lay1floats, size = 4)
+        bigVector <- c(bigVector, HeadBlock[1:Lay1floats])
+      } else {
+        seek(filPtr, (Lay1floats * 4), origin = 'current')
+      }
+    }
+    # don't read everything unless necessary
+    if (length(HeaderRead) == 0) {
+      cat('\n')
+      break
+    }
+
+    if (HeaderRead$KPER > max(SP_rng)) {
+      cat('\n')
+      break
+    }
+    # Display % complete
+    cat(paste('\r',format(as.numeric(HeaderRead$KPER) / max(SP_rng) * 100,digits = 2,nsmall = 2),"%"))
+  }
+
+  return(bigVector)
+}
+#' @title Read Heads by Layer
+#' @description \code{readHeadsbinByLay} searchs for a Modflow binary Heads Layer
+#'      and returns a vector of values by stress periods
+#'      identified in range of values
+#' @param filPtr, selectLayer
+#' @return bigVector
+#' @export
+
+#filPtr <-to.read
+
+readHeadsbinByLay <- function(filPtr, selectLayer,maxSP) {
+  bigVector <- vector('numeric')
+  HeaderRead <- readHeadsHeader(filPtr)
+  kntFloats <- HeaderRead$K * HeaderRead$NR * HeaderRead$NC
+  Lay1floats <- HeaderRead$NR * HeaderRead$NC
+  HeadBlock <- readBin(filPtr, double(), n = Lay1floats, size = 4)
+  bigVector <- c(bigVector, HeadBlock[1:Lay1floats])
+  i <- 1
+  cat(paste("0%.."))
+  SP_rng <- maxSP-1
+  repeat {
+    HeaderRead <- readHeadsHeader(filPtr)
+    # Don't read past EOF
+    if (length(HeaderRead) > 0) {
+      if (HeaderRead$K == selectLayer) {
         i <- i + 1
         HeadBlock <-
           readBin(filPtr, double(), n = Lay1floats, size = 4)
