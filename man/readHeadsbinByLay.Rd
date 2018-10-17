@@ -4,7 +4,7 @@
 \alias{readHeadsbinByLay}
 \title{Read Heads by Layer}
 \usage{
-readHeadsbinByLay(filPtr, selectLayer, maxSP)
+readHeadsbinByLay(to.Read, selectLayer, maxSP)
 }
 \arguments{
 \item{filPtr, }{selectLayer}

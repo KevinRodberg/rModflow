@@ -511,7 +511,8 @@ readHeadsbin <- function(filPtr, SP_rng) {
 
 #filPtr <-to.read
 
-readHeadsbinByLay <- function(filPtr, selectLayer,maxSP) {
+readHeadsbinByLay <- function(to.Read, selectLayer,maxSP) {
+  filPtr = file(to.Read, "rb")
   bigVector <- vector('numeric')
   HeaderRead <- readHeadsHeader(filPtr)
   kntFloats <- HeaderRead$K * HeaderRead$NR * HeaderRead$NC
@@ -547,7 +548,7 @@ readHeadsbinByLay <- function(filPtr, selectLayer,maxSP) {
     # Display % complete
     cat(paste('\r',format(as.numeric(HeaderRead$KPER) / max(SP_rng) * 100,digits = 2,nsmall = 2),"%"))
   }
-
+  close(filPtr)
   return(bigVector)
 }
 
