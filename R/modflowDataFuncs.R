@@ -20,10 +20,10 @@ defineMFmodel <- function() {
   startYr = c(1999, 1965, 1999, 1989)
   freq = c('Month', 'Month', 'Month','Month')
   nsp = c(192, 14975, 192, 288)
-  mpath =c("\\\\whqhpc01p\\hpcc_shared\\dbandara\\CFWI\\ECFTX\\Model\\Transient\\*.*",
-           "\\\\whqhpc01p\\hpcc_shared\\jgidding\\LECSR\\LOX18\\*.*",
-           "\\\\ad.sfwmd.gov\\dfsroot\\data\\wsd\\MOD\\LWCSASIAS\\model\\*.*",
-           "\\\\ad.sfwmd.gov\\dfsroot\\data\\wsd\\MOD\\ECFM\\MB\\*.*")
+  mpath =c("//whqhpc01p/hpcc_shared/dbandara/CFWI/ECFTX/Model/Transient/*.*",
+           "//whqhpc01p/hpcc_shared/jgidding/LECSR/LOX18/*.*",
+           "//ad.sfwmd.gov/dfsroot/data/wsd/MOD/LWCSASIAS/model/*.*",
+           "//ad.sfwmd.gov/dfsroot/data/wsd/MOD/ECFM/MB/*.*")
   MFmodel.Params <-
     data.frame(MFmodel, res, xmin, ymin, nlays,nrows, ncols, nsp, startYr,freq,mpath)
   rownames(MFmodel.Params) <- MFmodel.Params$MFmodel
