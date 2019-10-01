@@ -35,6 +35,7 @@ defineMFmodel <- function() {
 #' @return \code{model} name from vector of available models in MFModels
 #' @export
 #' @examples
+#'      exit("abnormal termination")
 
 exit <- function(msg){
   cat(paste0("*** ERROR ***: ", msg))
@@ -120,6 +121,7 @@ chooseModel <- function() {
 #'      ModelGridCoords <-future::value(g)
 
 readgridPoints<- function(Modelgrd.Path,Model.Shape){
+  require(future)
   Modelgrd %<-% rgdal::readOGR(Modelgrd.Path,Model.Shape)
   modCol <- grep("^col$",colnames(Modelgrd@data),ignore.case=T)
   modRow <- grep("^row$",colnames(Modelgrd@data),ignore.case=T)
@@ -411,6 +413,8 @@ readCBCbinByTerm <- function(filPtr, term, SP_rng, lay) {
   kntFloats <- HeaderRead$K * HeaderRead$NR * HeaderRead$NC
   Lay1floats <- HeaderRead$NR * HeaderRead$NC
   cbcBlock <- readBin(filPtr, double(), n = kntFloats, size = 4)
+  strt<-1+((lay-1)*Lay1floats)
+  end <- lay*Lay1floats
   i <- 1
   cat(paste("0%.."))
   if (HeaderRead$TEXT == term  &&
@@ -423,13 +427,15 @@ readCBCbinByTerm <- function(filPtr, term, SP_rng, lay) {
       thisHeader <- readCBCHeader(filPtr)
       # Don't read past EOF
       if (length(thisHeader) > 0) {
-        if (thisHeader$TEXT == term  &&
+        if (term ==thisHeader$TEXT   &&
             is.element(thisHeader$KPER, SP_rng) &&
             thisHeader$KPER <= max(SP_rng)) {
           i <- i + 1
           cbcBlock <-
             readBin(filPtr, double(), n = kntFloats, size = 4)
-          bigVector <- c(bigVector, cbcBlock[1:Lay1floats])
+
+          bigVector <- c(bigVector, cbcBlock[strt:end])
+          # bigVector <- c(bigVector, cbcBlock[1:Lay1floats])
         } else {
           seek(filPtr, (kntFloats * 4), origin = 'current')
         }
@@ -661,4 +667,40 @@ chooseBudgetTerms <- function(CBCterms) {
   n1  <- as.integer((tclvalue(rBtnVal1)))
   n2  <- as.integer((tclvalue(rBtnVal2)))
   return(list(n1=n1, n2=n2))
+}
+#' @title Choose Modflow Cell-by-cell Budget Terms
+#' @description GUI choices for Modflow Budget Terms
+#' @param CBCterms vector created by \code{listBinHeaders}
+#' @export
+chooseBudgetTerms1Col <- function(CBCterms) {
+  win2 <- tktoplevel()
+  frame1 <-  tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
+  frame3 <-  tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
+  lbl.CBCSelect <- tk2label(win2, text = "Select Budget Terms to Extract from CBC file", font = fontHeading)
+  tkpack(lbl.CBCSelect,  side = "top",  expand = FALSE,  ipadx = 5,  ipady = 5,  fill = "x")
+  tkpack(frame3,side = "bottom",expand = TRUE,fill = "both")
+  tkpack(frame1,side = "left",expand = TRUE,fill = "both")
+  rBtnVal1 = tclVar(trimws(CBCterms[[1]]))
+
+  # create 1 columns of CBCterms radioButtons
+  btns.f1 = vector()
+  for (num in seq(1, length(CBCterms))) {
+    btn <- tk2radiobutton(frame1)
+    tkconfigure(btn, variable = rBtnVal1, value = num)
+    tkgrid(tk2label(frame1, text = trimws(CBCterms[[num]])),btn,padx = 10,pady =  5)
+    btns.f1 = append(btns.f1, btn)
+  }
+
+  tkgrid(tk2button(frame3,text ="Cancel",width = -6,command = fnCncl),
+         tk2button(frame3,text ="OK",    width = -6,command = fnOK  ), padx = 10,pady = c(5, 15))
+  tkbind(win2, "<Return>", fnOK)
+
+  tkraise(win2)
+  tkwait.variable(done)
+  tkdestroy(win2)
+  if (tclvalue(done) != 1) {
+    exit("User canceled Model Selection")
+  }
+  n1  <- as.integer((tclvalue(rBtnVal1)))
+  return(list(n1=n1))
 }
