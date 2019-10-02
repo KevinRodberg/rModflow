@@ -56,12 +56,13 @@ exit <- function(msg){
 #'      MFmodel.Params <- defineMFmodel()
 #'      model <- chooseModel()
 #'      M <- as.data.frame(MFmodel.Params[model,])
-#'      fontHeading is defined with [family = "Arial",size = 24,weight = "bold",slant = "italic"]
+#'      font = fontHeading # is defined with [family = "Arial",size = 24,weight = "bold",slant = "italic"]
 
 chooseModel <- function() {
   library(tcltk2)
   tempfontHeading <- tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
   assign("fontHeading",tempfontHeading,envir = .GlobalEnv)
+  # fontHeading <<- tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
   done <- tclVar(0)
 
   #===============================================
