@@ -32,7 +32,7 @@ defineMFmodel <- function() {
 
 #' @title Exit Function
 #' @description \code{exit} Provides Function to exit a little more nicely
-#' @return \code{model} name from vector of available models in MFModels
+#' @return \code{msg} Displays message on exit
 #' @export
 #' @examples
 #'      exit("abnormal termination")
@@ -56,10 +56,12 @@ exit <- function(msg){
 #'      MFmodel.Params <- defineMFmodel()
 #'      model <- chooseModel()
 #'      M <- as.data.frame(MFmodel.Params[model,])
+#'      fontHeading is defined with [family = "Arial",size = 24,weight = "bold",slant = "italic"]
 
 chooseModel <- function() {
   library(tcltk2)
-  fontHeading <- tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
+  tempfontHeading <- tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
+  assign("fontHeading",tempfontHeading,envir = .GlobalEnv)
   done <- tclVar(0)
 
   #===============================================

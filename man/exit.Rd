@@ -7,7 +7,7 @@
 exit(msg)
 }
 \value{
-\code{model} name from vector of available models in MFModels
+\code{msg} Displays message on exit
 }
 \description{
 \code{exit} Provides Function to exit a little more nicely
