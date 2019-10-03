@@ -1,11 +1,11 @@
 Package: rModflow
 Type: Package
 Title: Tools to Process Modflow Data
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(person("Kevin","Rodberg",email="krodberg@sfwmd.gov", role = c("aut", "cre")))
 Description: Manipulate Modflow binary data.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
-Imports: tcltk2
+Imports: tcltk2, rgdal, future, raster, rgeos, sf, sp

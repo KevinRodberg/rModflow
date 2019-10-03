@@ -1,13 +1,12 @@
 #source ("//ad.sfwmd.gov/dfsroot/data/wsd/SUP/devel/source/R/ResuableFunctions/tclFuncs.R")
-
+utils::globalVariables(c("fontHeading","fnCncl","fnOK","done",
+                         "MFmodel","MFmodel.Params","model","M",
+                         'DiffVector','ncols','nrows','CbyCdata1',
+                         'CbyCdata2','startYr','SP_rng','nsp','TtlStrPd'))
 #' @title Defines SFWMD Modflow Model characteristics
 #' @description \code{defineMFmodel} defines several SFWMD Modflow Models characteristics
 #' @return MFmodel.Params Data.frame providing model characteristics
 #' @export
-#' @examples
-#'      MFmodel.Params <- defineMFmodel()
-#'      model <- chooseModel()
-#'      M <- as.data.frame(MFmodel.Params[model,])
 
 defineMFmodel <- function() {
   MFmodel = c('ECFTX', 'NPALM', 'LWCSIM','ECFM')
@@ -32,17 +31,16 @@ defineMFmodel <- function() {
 
 #' @title Exit Function
 #' @description \code{exit} Provides Function to exit a little more nicely
+#' @param msg Message to display on exit
 #' @return \code{msg} Displays message on exit
 #' @export
-#' @examples
-#'      exit("abnormal termination")
 
 exit <- function(msg){
-  cat(paste0("*** ERROR ***: ", msg))
+  cat(paste0("*** ERROR ***: ", msg,'\n'))
   closeAllConnections()
-  .Internal(.invokeRestart(list(NULL, NULL), NULL))
-  options(warn=0)
-
+  stop()
+  # .Internal(.invokeRestart(list(NULL, NULL), NULL))
+  # options(warn=0)
 }
 
 #' @title Choose Modflow Model
@@ -56,78 +54,96 @@ exit <- function(msg){
 #'      MFmodel.Params <- defineMFmodel()
 #'      model <- chooseModel()
 #'      M <- as.data.frame(MFmodel.Params[model,])
-#'      font = fontHeading # is defined with [family = "Arial",size = 24,weight = "bold",slant = "italic"]
+#'      font = fontHeading
 
 chooseModel <- function() {
-  library(tcltk2)
-  tempfontHeading <- tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
+  requireNamespace("tcltk2")
+  requireNamespace("tcltk")
+  tempfontHeading <- tcltk::tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
   assign("fontHeading",tempfontHeading,envir = .GlobalEnv)
   # fontHeading <<- tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
-  done <- tclVar(0)
+  assign("done", tcltk::tclVar(0),envir = .GlobalEnv)
+  assign("fnOK", function() {tcltk::tclvalue(done) <- 1},envir = .GlobalEnv)
+  assign("fnCncl", function() {tcltk::tclvalue(done) <- 2},envir = .GlobalEnv)
 
-  #===============================================
-  #  define ok and Cancel functions for tcl buttons
-  #  and stadardize some tcl vars
-  #===============================================
-  fnOK <- function() {
-    tclvalue(done) <- 1}
+  # #===============================================
+  # #  define ok and Cancel functions for tcl buttons
+  # #  and stadardize some tcl vars
+  # #===============================================
+  # fnOK <- function() {
+  #   tcltk::tclvalue(done) <- 1}
+  #
+  # fnCncl <- function() {
+  #   tcltk::tclvalue(done) <- 2}
 
-  fnCncl <- function() {
-    tclvalue(done) <- 2}
-
-  win1 <- tktoplevel()
-  tkraise(win1)
+  win1 <- tcltk::tktoplevel()
+  tcltk::tkraise(win1)
 
   MFmodels = as.vector( MFmodel.Params$MFmodel)
 #  MFmodels = c('ECFTX', 'NPALM', 'LWCSIM')
   numIDs = length(MFmodels)
 
-  rBtnVal = tclVar(MFmodels[2])
+  rBtnVal = tcltk::tclVar(MFmodels[2])
 
-  lbl.Select <-tk2label(win1, text = "Select Model", font = fontHeading)
-  lbl.Blnk <- tk2label(win1, text = " ", font = fontHeading)
-  tkgrid(lbl.Select,columnspan = 4,padx = 100,pady = 5)
+  lbl.Select <- tcltk2::tk2label(win1, text = "Select Model", font = fontHeading)
+  lbl.Blnk <- tcltk2::tk2label(win1, text = " ", font = fontHeading)
+  tcltk::tkgrid(lbl.Select,columnspan = 4,padx = 100,pady = 5)
 
   # Radio buttons can be created and packed or added to tkgrid on the fly:
   for (num in 1:numIDs) {
-    btn <- tk2radiobutton(win1)
-    tkconfigure(btn, variable = rBtnVal, value = MFmodels[num])
-    tkgrid(tk2label(win1, text = MFmodels[num]),btn,padx = 10,pady =  5)
+    btn <- tcltk2::tk2radiobutton(win1)
+    tcltk::tkconfigure(btn, variable = rBtnVal, value = MFmodels[num])
+    tcltk::tkgrid(tk2label(win1, text = MFmodels[num]),btn,padx = 10,pady =  5)
   }
 
   btn.OK <-tk2button(win1,text = "OK",width = -6,command = fnOK)
   btn.Cncl <-tk2button(win1,text = "Cancel",width = -6,command = fnCncl)
-  tkgrid(lbl.Blnk,btn.OK,btn.Cncl,padx = c(5, 5),pady = c(5, 5))
-  tkbind(win1, "<Return>", fnOK)
-  tkraise(win1)
-  tkwait.variable(done)
-  tkdestroy(win1)
+  tcltk::tkgrid(lbl.Blnk,btn.OK,btn.Cncl,padx = c(5, 5),pady = c(5, 5))
+  tcltk::tkbind(win1, "<Return>", fnOK)
+  tcltk::tkraise(win1)
+  tcltk::tkwait.variable(done)
+  tcltk::tkdestroy(win1)
 
-  if (tclvalue(done) != 1) {
+  if (tcltk::tclvalue(done) != 1) {
     exit("User canceled Model Selection")
   }
-  return((tclvalue(rBtnVal)))
+  return((tcltk::tclvalue(rBtnVal)))
 }
 
 #' @title Read Model Mesh Points
-#' @description \code{defineMFmodel} Reads arcGIS shape file of model mesh
+#' @description \code{readgridPoints} Reads arcGIS shape file of model mesh
 #'    -Converts mesh polygons to points referencing the center of the model cells
 #'    -Changes spatial reference if necessary
 #'    -Converts point coordinates into a data frame
+#' @param Modelgrd.Path Path to model mesh shapefile
+#' @param Model.Shape Name of model mesh shapefile without .shp extension
 #' @return ModelGridCoords Data.frame providing model row, column and coordinates
+#' @import future
+#' @import rgdal
+#' @import sp
 #' @export
 #' @examples
-#'      ModelGridCoords<-readgridPoints(Modelgrd.Path,Model.Shape)
-#'
-#'      ---Using futures:
-#'      g <- future({readgridPoints(Modelgrd.Path,Model.Shape)})
-#'      ModelGridCoords <-future::value(g)
+#'      Modelgrd.Path <- '//ad.sfwmd.gov/dfsroot/data/wsd/GIS/GISP_2012/DataLib/ModelData/LWCSIM'
+#'      Model.Shape <- 'LWCSIM_mesh'
+#' \dontrun{
+#'      ModelGridCoords %<-% readgridPoints(Modelgrd.Path,Model.Shape)
+#'      }
 
 readgridPoints<- function(Modelgrd.Path,Model.Shape){
-  require(future)
-  Modelgrd %<-% rgdal::readOGR(Modelgrd.Path,Model.Shape)
-  modCol <- grep("^col$",colnames(Modelgrd@data),ignore.case=T)
-  modRow <- grep("^row$",colnames(Modelgrd@data),ignore.case=T)
+  requireNamespace("future")
+  requireNamespace("sp")
+  requireNamespace("rgdal")
+  #=================================================================
+  # NAD83 HARN StatePlane Florida East FIPS 0901 Feet
+  #=================================================================
+  assign("HARNSP17ft", sp::CRS("+init=epsg:2881"))
+  assign("HARNUTM17Nm", sp::CRS("+init=epsg:3747"))
+  assign("latlongs", sp::CRS("+proj=longlat +datum=WGS84"))
+
+
+  Modelgrd <- future(rgdal::readOGR(Modelgrd.Path,Model.Shape))
+  modCol <- grep("^col$",colnames(Modelgrd@data),ignore.case=TRUE)
+  modRow <- grep("^row$",colnames(Modelgrd@data),ignore.case=TRUE)
   gridCentroids <- rgeos::gCentroid(Modelgrd,byid=TRUE)
   print(sp::proj4string(Modelgrd))
   if (!raster::compareCRS(HARNSP17ft,sp::proj4string(Modelgrd))) {
@@ -148,77 +164,77 @@ readgridPoints<- function(Modelgrd.Path,Model.Shape){
 #' @return list(matrixSource=matrixSrc, printingOn=printingOn, printAnnualOn=printAnnualOn,
 #'       Animform=Animform))
 #' @export
-#' @examples
-#'
 
 definePlotOpts <- function(){
-  win3 <- tktoplevel()
-  frm1 <- tk2frame(win3,borderwidth = 3,relief = "sunken",padding = 10)
-  frm2 <- tk2frame(win3,borderwidth = 3,relief = "sunken",padding = 10)
-  frm3 <- tk2frame(win3,borderwidth = 3,relief = "sunken",padding = 10)
+  requireNamespace("tcltk2")
+  requireNamespace("tcltk")
+  win3 <- tcltk::tktoplevel()
+  frm1 <- tcltk2::tk2frame(win3,borderwidth = 3,relief = "sunken",padding = 10)
+  frm2 <- tcltk2::tk2frame(win3,borderwidth = 3,relief = "sunken",padding = 10)
+  frm3 <- tcltk2::tk2frame(win3,borderwidth = 3,relief = "sunken",padding = 10)
 
-  tkpack(  tk2label(win3,text = "Define Plot Options",width = 40,
+  tcltk::tkpack(  tcltk2::tk2label(win3,text = "Define Plot Options",width = 40,
                     justify = "left",background = "#ffffff"),
            side = "top",expand = FALSE,ipadx = 5,ipady = 5,fill = "x")
 
-  tkpack(frm3,side = "bottom",expand = TRUE, fill = "both")
-  tkpack(frm1,side = "left",  expand = TRUE, fill = "both")
-  tkpack(frm2,side = "right", expand = TRUE, fill = "both")
+  tcltk::tkpack(frm3,side = "bottom",expand = TRUE, fill = "both")
+  tcltk::tkpack(frm1,side = "left",  expand = TRUE, fill = "both")
+  tcltk::tkpack(frm2,side = "right", expand = TRUE, fill = "both")
 
   matrixSrcLst <- c('NetRCH', 'MFRCH', 'MFEVT', 'asciiVector')
-  rBtnMat = tclVar(matrixSrcLst[1])
+  rBtnMat = tcltk::tclVar(matrixSrcLst[1])
 
-  btn1 <- tk2radiobutton(frm1)
-  btn2 <- tk2radiobutton(frm1)
-  btn3 <- tk2radiobutton(frm1)
-  btn4 <- tk2radiobutton(frm1)
-  tkconfigure(btn1, variable = rBtnMat, value = matrixSrcLst[1])
-  tkconfigure(btn2, variable = rBtnMat, value = matrixSrcLst[2])
-  tkconfigure(btn3, variable = rBtnMat, value = matrixSrcLst[3])
-  tkconfigure(btn4, variable = rBtnMat, value = matrixSrcLst[4])
+  btn1 <- tcltk2::tk2radiobutton(frm1)
+  btn2 <- tcltk2::tk2radiobutton(frm1)
+  btn3 <- tcltk2::tk2radiobutton(frm1)
+  btn4 <- tcltk2::tk2radiobutton(frm1)
+  tcltk::tkconfigure(btn1, variable = rBtnMat, value = matrixSrcLst[1])
+  tcltk::tkconfigure(btn2, variable = rBtnMat, value = matrixSrcLst[2])
+  tcltk::tkconfigure(btn3, variable = rBtnMat, value = matrixSrcLst[3])
+  tcltk::tkconfigure(btn4, variable = rBtnMat, value = matrixSrcLst[4])
 
-  tkgrid(tk2label(frm1, text = trimws(matrixSrcLst[1])),btn1,padx = 10,pady =  5)
-  tkgrid(tk2label(frm1, text = trimws(matrixSrcLst[2])),btn2,padx = 10,pady =  5)
-  tkgrid(tk2label(frm1, text = trimws(matrixSrcLst[3])),btn3,padx = 10,pady =  5)
-  tkgrid(tk2label(frm1, text = trimws(matrixSrcLst[4])),btn4,padx = 10,pady =  5)
+  tcltk::tkgrid(tcltk2::tk2label(frm1, text = trimws(matrixSrcLst[1])),btn1,padx = 10,pady =  5)
+  tcltk::tkgrid(tcltk2::tk2label(frm1, text = trimws(matrixSrcLst[2])),btn2,padx = 10,pady =  5)
+  tcltk::tkgrid(tcltk2::tk2label(frm1, text = trimws(matrixSrcLst[3])),btn3,padx = 10,pady =  5)
+  tcltk::tkgrid(tcltk2::tk2label(frm1, text = trimws(matrixSrcLst[4])),btn4,padx = 10,pady =  5)
 
   pltOptions <-  c("Save Raster png",
                    "Save Annual Raster png",
                    "Create Animation (avi)")
 
-  ckbx1 <- tk2checkbutton(frm2)
-  ckbx2 <- tk2checkbutton(frm2)
-  ckbx3 <- tk2checkbutton(frm2)
+  ckbx1 <- tcltk2::tk2checkbutton(frm2)
+  ckbx2 <- tcltk2::tk2checkbutton(frm2)
+  ckbx3 <- tcltk2::tk2checkbutton(frm2)
 
-  cbVar1 <- tclVar("0")
-  cbVar2 <- tclVar("1")
-  cbVar3 <- tclVar("0")
+  cbVar1 <- tcltk::tclVar("0")
+  cbVar2 <- tcltk::tclVar("1")
+  cbVar3 <- tcltk::tclVar("0")
 
-  tkconfigure(ckbx1, text = pltOptions[1], variable = cbVar1)
-  tkconfigure(ckbx2, text = pltOptions[2], variable = cbVar2)
-  tkconfigure(ckbx3, text = pltOptions[3], variable = cbVar3)
+  tcltk::tkconfigure(ckbx1, text = pltOptions[1], variable = cbVar1)
+  tcltk::tkconfigure(ckbx2, text = pltOptions[2], variable = cbVar2)
+  tcltk::tkconfigure(ckbx3, text = pltOptions[3], variable = cbVar3)
 
-  tkgrid(tk2label(frm2), ckbx1,  padx = 10, pady =  5)
-  tkgrid(tk2label(frm2), ckbx2,  padx = 10, pady =  5)
-  tkgrid(tk2label(frm2), ckbx3,  padx = 10, pady =  5)
+  tcltk::tkgrid(tcltk2::tk2label(frm2), ckbx1,  padx = 10, pady =  5)
+  tcltk::tkgrid(tcltk2::tk2label(frm2), ckbx2,  padx = 10, pady =  5)
+  tcltk::tkgrid(tcltk2::tk2label(frm2), ckbx3,  padx = 10, pady =  5)
 
-  btn.OK <- tk2button(frm3,text = "OK",width = -6,command = fnOK)
-  btn.Cncl <-  tk2button(frm3,text = "Cancel",width = -6,command = fnCncl)
-  tkgrid(btn.Cncl, btn.OK, padx = 10, pady = c(5, 15))
-  tkraise(win3)
-  tkbind(frm3, "<Return>", fnOK)
-  tkwait.variable(done)
-  tkdestroy(win3)
-  if (tclvalue(done) != 1) {
+  btn.OK <- tcltk2::tk2button(frm3,text = "OK",width = -6,command = fnOK)
+  btn.Cncl <-  tcltk2::tk2button(frm3,text = "Cancel",width = -6,command = fnCncl)
+  tcltk::tkgrid(btn.Cncl, btn.OK, padx = 10, pady = c(5, 15))
+  tcltk::tkraise(win3)
+  tcltk::tkbind(frm3, "<Return>", fnOK)
+  tcltk::tkwait.variable(done)
+  tcltk::tkdestroy(win3)
+  if (tcltk::tclvalue(done) != 1) {
     exit("User canceled Model Selection")
   }
-  matrixSrc <- as.character(tclvalue(rBtnMat))
+  matrixSrc <- as.character(tcltk::tclvalue(rBtnMat))
   printingOn = FALSE
-  if (as.character(tclvalue(cbVar1)) == '1') {  printingOn = TRUE }
+  if (as.character(tcltk::tclvalue(cbVar1)) == '1') {  printingOn = TRUE }
   printAnnualOn = FALSE
-  if (as.character(tclvalue(cbVar2)) == '1') {  printAnnualOn = TRUE }
+  if (as.character(tcltk::tclvalue(cbVar2)) == '1') {  printAnnualOn = TRUE }
   Animform <- 'off'
-  if (as.character(tclvalue(cbVar3)) == '1') {  Animform <- 'AVI' }
+  if (as.character(tcltk::tclvalue(cbVar3)) == '1') {  Animform <- 'AVI' }
   return(list(matrixSource=matrixSrc,
               printingOn=printingOn,
               printAnnualOn=printAnnualOn,
@@ -229,11 +245,15 @@ definePlotOpts <- function(){
 #' @title Choose Source Data
 #' @description \code{chooseDataSource} is a function to choose data:  Source of input is either read from asciiFile
 #'      or taken from previously generated DiffArray3D R dataset [see \code{ReadCBCbyLayer.R}]
+#' @param matrixSource defines source of data
 #' @return list(Array3D=Array3D,rasType=rasTyp))
 #' @export
 
 chooseDataSource <- function(matrixSource){
-
+  requireNamespace("tcltk2")
+  requireNamespace("tcltk")
+  tempfontHeading <- tcltk::tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
+  assign("fontHeading",tempfontHeading,envir = .GlobalEnv)
   if (matrixSource %in% c('NetRCH', 'MFRCH', 'MFEVT')) {
     if (!exists("DiffVector"))
     {
@@ -244,35 +264,35 @@ chooseDataSource <- function(matrixSource){
       Array3D <-  array(DiffVector, dim = c(ncols, nrows, SPknt))
     } else if (matrixSource == 'MFRCH') {
       rasTyp = 'MFRCH'
-      Array3D <-  array(CBCdata1, dim = c(ncols, nrows, SPknt))
+      Array3D <-  array(CbyCdata1, dim = c(ncols, nrows, SPknt))
     } else if (matrixSource == 'MFEVT') {
       rasTyp = 'MFEVT'
-      Array3D <-  array(CBCdata2, dim = c(ncols, nrows, SPknt))* (-1.0)
+      Array3D <-  array(CbyCdata2, dim = c(ncols, nrows, SPknt))* (-1.0)
     }
     st = paste0(startYr, "/02/01")
     dateSeries <-
       seq(as.Date(st), by = "month", length.out = max(SP_rng)) - 1
   } else  {
-    win4 <- tktoplevel()
+    win4 <- tcltk::tktoplevel()
     msg = paste('Identify ASCII File with Dimensions Equal to Model:', MFmodel)
-    lbl.message <- tk2label(win4, text = msg, font = fontHeading)
-    tkgrid(lbl.message, padx = 30)
-    tkraise(win4)
+    lbl.message <- tcltk2::tk2label(win4, text = msg, font = fontHeading)
+    tcltk::tkgrid(lbl.message, padx = 30)
+    tcltk::tkraise(win4)
     mpath <- toString(MFmodel.Params[model,]$mpath)
-    asciiFile<-choose.files(default=mpath)
+    asciiFile<-utils::choose.files(default=mpath)
     prompt <- "Enter raster Description like [EVT,RCH, etc]"
-    rasTyp <- promptUser4Text(prompt)
+    rasTyp <- readline(prompt=prompt)
     res = 1.0
     fileSz <- file.info(asciiFile)$size
     msg2 = paste("Reading ",round(fileSz / 1000000, digits = 2),
                  "MBytes for ",rasTyp)
     msg3 = paste("Scan will take approximately ",
                  round(fileSz / 1000000 / 13, digits = 0),"Seconds ")
-    lbl.message2 <- tk2label(win4, text = msg2, font = fontHeading)
-    lbl.message3 <- tk2label(win4, text = msg3, font = fontHeading)
-    tkgrid(lbl.message2, padx = 30)
-    tkgrid(lbl.message3, padx = 30)
-    tkraise(win4)
+    lbl.message2 <- tcltk2::tk2label(win4, text = msg2, font = fontHeading)
+    lbl.message3 <- tcltk2::tk2label(win4, text = msg3, font = fontHeading)
+    tcltk::tkgrid(lbl.message2, padx = 30)
+    tcltk::tkgrid(lbl.message3, padx = 30)
+    tcltk::tkraise(win4)
     VectorBySP <- scan(asciiFile, what =)
     if (exists("SP_rng"))
     assign("SP_rng",seq(1,nsp),envir = .GlobalEnv)
@@ -282,7 +302,7 @@ chooseDataSource <- function(matrixSource){
 
     rm(VectorBySP)
     gc(verbose=TRUE)
-    tkdestroy(win4)
+    tcltk::tkdestroy(win4)
   }
   return(list(Array3D=Array3D,rasType=rasTyp))
 }
@@ -290,7 +310,7 @@ chooseDataSource <- function(matrixSource){
 
 #' @title Read cell-by-cell budget header record
 #' @description \code{readCBCHeader} Reads just the Header record from a binary cell-by-Cell budget file
-#' @param fileptr file pointer
+#' @param filPtr file pointer
 #' @return \code{header} as a list c(KSTP,KPER,TEXT,NC,NR,K)
 #' @export
 
@@ -319,7 +339,7 @@ readCBCHeader <- function(filPtr) {
 
 #' @title Read Heads header record
 #' @description \code{readHeadsHeader} Reads just the Header record from a binary Heads file
-#' @param fileptr file pointer
+#' @param filPtr file pointer
 #' @return \code{header} as a list c(KSTP,KPER,PERTIM,TOTTIM,TEXT,NC,NR,K)
 #' @export
 
@@ -356,7 +376,7 @@ readHeadsHeader <- function(filPtr) {
 #' @title Creates list of Budget Term
 #' @description \code{listBinHeaders} creates a list of Budget Term Headers available in
 #'      Modflow binary cell-by-cell file
-#' @param fileptr file pointer
+#' @param filPtr file pointer
 #' @return CBCTermSet as list c(firstHeader$TEXT,firstHeader$K,firstHeader$NR,firstHeader$NC,CBCterms)
 #' @export
 
@@ -367,7 +387,7 @@ listBinHeaders <- function(filPtr) {
   #  print(paste("$K", firstHeader$K, " $NR", firstHeader$NR, " $NC",  firstHeader$NC))
   if (firstHeader$K > 30){
     exit(paste("Invalid data in Header record.  Possibly non Binary datafile:",
-               summary(to.read)$description))
+               summary(filPtr)$description))
   }
   kntFloats <- firstHeader$K * firstHeader$NR * firstHeader$NC
   cbcBlock <- readBin(filPtr, double(), n = kntFloats, size = 4)
@@ -406,11 +426,15 @@ listBinHeaders <- function(filPtr) {
 #' @title Read budget term by layer
 #' @description \code{readCBCbinByTerm} search for a defined budget term
 #'      and returns a vector of values by stress periods identified in range of values
-#' @param filPtr, term, SP_rng, lay
+#' @param cbbFile filename to be referenced by file pointer filPtr
+#' @param term Modflow budget term
+#' @param SP_rng Stress Period range
+#' @param lay layer to read
 #' @return bigVector
 #' @export
 
 readCBCbinByTerm <- function(filPtr, term, SP_rng, lay) {
+  # filPtr <- file(cbbFile, "rb")
   bigVector <- vector('numeric')
   HeaderRead <- readCBCHeader(filPtr)
   kntFloats <- HeaderRead$K * HeaderRead$NR * HeaderRead$NC
@@ -422,7 +446,7 @@ readCBCbinByTerm <- function(filPtr, term, SP_rng, lay) {
   cat(paste("0%.."))
   if (HeaderRead$TEXT == term  &&
       is.element(HeaderRead$KPER, SP_rng &&
-                 thisHeader$KPER <= max(SP_rng))) {
+                 HeaderRead$KPER <= max(SP_rng))) {
     bigVector <- c(bigVector , cbcBlock)
     i <- i + 1
   } else{
@@ -457,6 +481,7 @@ readCBCbinByTerm <- function(filPtr, term, SP_rng, lay) {
       cat(paste('\r',format(as.numeric(thisHeader$KPER) / max(SP_rng) * 100,digits = 2,nsmall = 2),"%"))
     }
   }
+  close(filPtr)
   return(bigVector)
 }
 
@@ -464,7 +489,8 @@ readCBCbinByTerm <- function(filPtr, term, SP_rng, lay) {
 #' @description \code{readHeadsbin} searchs for a Modflow binary Heads Layers
 #'      and returns a vector of values by stress periods
 #'      identified in range of values
-#' @param filPtr, SP_rng [stress period range]
+#' @param filPtr file pointer
+#' @param SP_rng [stress period range]
 #' @return bigVector
 #' @export
 
@@ -514,7 +540,9 @@ readHeadsbin <- function(filPtr, SP_rng) {
 #' @description \code{readHeadsbinByLay} searchs for a Modflow binary Heads Layer
 #'      and returns a vector of values by stress periods
 #'      identified in range of values
-#' @param filPtr, selectLayer
+#' @param to.Read name of file to assign to file pointer
+#' @param selectLayer selected layer to process
+#' @param maxSP maximum Stress period ot process
 #' @return bigVector
 #' @export
 
@@ -565,7 +593,9 @@ readHeadsbinByLay <- function(to.Read, selectLayer,maxSP) {
 #' @description \code{readHeadsbinAtPnts} searchs for Heads by Layer
 #'      and returns a vector of values at each Point
 #'      by Stress Periods identified in range of values
-#' @param filPtr, SP_rng, PointVector
+#' @param filPtr file pointer
+#' @param SP_rng range of stress periods
+#' @param PointVector List of points
 #' @return listOfPnts [with values for stress period range]
 #' @export
 #filPtr <-to.read
@@ -630,45 +660,50 @@ readHeadsbinAtPnts <- function(filPtr, SP_rng, PointVector) {
 #' @param CBCterms vector created by \code{listBinHeaders}
 #' @export
 chooseBudgetTerms <- function(CBCterms) {
-  win2 <- tktoplevel()
-  frame1 <-  tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
-  frame2 <-  tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
-  frame3 <-  tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
-  lbl.CBCSelect <- tk2label(win2, text = "Select Budget Terms to Extract from CBC file", font = fontHeading)
-  tkpack(lbl.CBCSelect,  side = "top",  expand = FALSE,  ipadx = 5,  ipady = 5,  fill = "x")
-  tkpack(frame3,side = "bottom",expand = TRUE,fill = "both")
-  tkpack(frame1,side = "left",expand = TRUE,fill = "both")
-  tkpack(frame2,side = "right",expand = TRUE,fill = "both")
-  rBtnVal1 = tclVar(trimws(CBCterms[[1]]))
-  rBtnVal2 = tclVar(trimws(CBCterms[[1]]))
+  requireNamespace("tcltk2")
+  requireNamespace("tcltk")
+  tempfontHeading <- tcltk::tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
+  assign("fontHeading",tempfontHeading,envir = .GlobalEnv)
+  win2 <- tcltk::tktoplevel()
+  frame1 <-  tcltk2::tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
+  frame2 <-  tcltk2::tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
+  frame3 <-  tcltk2::tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
+  lbl.CBCSelect <- tcltk2::tk2label(win2, text = "Select Budget Terms to Extract from CBC file", font = fontHeading)
+  tcltk::tkpack(lbl.CBCSelect,  side = "top",  expand = FALSE,  ipadx = 5,  ipady = 5,  fill = "x")
+  tcltk::tkpack(frame3,side = "bottom",expand = TRUE,fill = "both")
+  tcltk::tkpack(frame1,side = "left",expand = TRUE,fill = "both")
+  tcltk::tkpack(frame2,side = "right",expand = TRUE,fill = "both")
+  rBtnVal1 = tcltk::tclVar(trimws(CBCterms[[1]]))
+  rBtnVal2 = tcltk::tclVar(trimws(CBCterms[[1]]))
 
   # create 2 columns of CBCterms radioButtons
   btns.f1 = vector()
   for (num in seq(1, length(CBCterms))) {
-    btn <- tk2radiobutton(frame1)
-    tkconfigure(btn, variable = rBtnVal1, value = num)
-    tkgrid(tk2label(frame1, text = trimws(CBCterms[[num]])),btn,padx = 10,pady =  5)
+    btn <- tcltk2::tk2radiobutton(frame1)
+    tcltk::tkconfigure(btn, variable = rBtnVal1, value = num)
+    tcltk::tkgrid(tcltk2::tk2label(frame1, text = trimws(CBCterms[[num]])),btn,padx = 10,pady =  5)
     btns.f1 = append(btns.f1, btn)
   }
   btns.f2 = vector()
   for (num in seq(1, length(CBCterms))) {
-    btn <- tk2radiobutton(frame2)
-    tkconfigure(btn, variable = rBtnVal2, value = num)
-    tkgrid(tk2label(frame2, text = trimws(CBCterms[[num]])),btn,padx = 10,pady =  5)
+    btn <- tcltk2::tk2radiobutton(frame2)
+    tcltk::tkconfigure(btn, variable = rBtnVal2, value = num)
+    tcltk::tkgrid(tcltk2::tk2label(frame2, text = trimws(CBCterms[[num]])),btn,padx = 10,pady =  5)
     btns.f2 = append(btns.f2, btn)
   }
-  tkgrid(tk2button(frame3,text ="Cancel",width = -6,command = fnCncl),
-         tk2button(frame3,text ="OK",    width = -6,command = fnOK  ), padx = 10,pady = c(5, 15))
-  tkbind(win2, "<Return>", fnOK)
+  tcltk::tkgrid(tcltk2::tk2button(frame3,text ="Cancel",width = -6,command = fnCncl),
+                tcltk2::tk2button(frame3,text ="OK",    width = -6,command = fnOK  ),
+                padx = 10,pady = c(5, 15))
+  tcltk::tkbind(win2, "<Return>", fnOK)
 
-  tkraise(win2)
-  tkwait.variable(done)
-  tkdestroy(win2)
-  if (tclvalue(done) != 1) {
+  tcltk::tkraise(win2)
+  tcltk::tkwait.variable(done)
+  tcltk::tkdestroy(win2)
+  if (tcltk::tclvalue(done) != 1) {
     exit("User canceled Model Selection")
   }
-  n1  <- as.integer((tclvalue(rBtnVal1)))
-  n2  <- as.integer((tclvalue(rBtnVal2)))
+  n1  <- as.integer((tcltk::tclvalue(rBtnVal1)))
+  n2  <- as.integer((tcltk::tclvalue(rBtnVal2)))
   return(list(n1=n1, n2=n2))
 }
 #' @title Choose Modflow Cell-by-cell Budget Terms
@@ -676,34 +711,80 @@ chooseBudgetTerms <- function(CBCterms) {
 #' @param CBCterms vector created by \code{listBinHeaders}
 #' @export
 chooseBudgetTerms1Col <- function(CBCterms) {
-  win2 <- tktoplevel()
-  frame1 <-  tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
-  frame3 <-  tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
-  lbl.CBCSelect <- tk2label(win2, text = "Select Budget Terms to Extract from CBC file", font = fontHeading)
-  tkpack(lbl.CBCSelect,  side = "top",  expand = FALSE,  ipadx = 5,  ipady = 5,  fill = "x")
-  tkpack(frame3,side = "bottom",expand = TRUE,fill = "both")
-  tkpack(frame1,side = "left",expand = TRUE,fill = "both")
-  rBtnVal1 = tclVar(trimws(CBCterms[[1]]))
+  requireNamespace("tcltk2")
+  requireNamespace("tcltk")
+  tempfontHeading <- tcltk::tkfont.create(family = "Arial",size = 24,weight = "bold",slant = "italic")
+  assign("fontHeading",tempfontHeading,envir = .GlobalEnv)
+  win2 <- tcltk::tktoplevel()
+  frame1 <-  tcltk2::tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
+  frame3 <-  tcltk2::tk2frame(win2,borderwidth = 3,relief = "sunken",padding = 10)
+  lbl.CBCSelect <- tcltk2::tk2label(win2, text = "Select Budget Terms to Extract from CBC file",
+                                    font = fontHeading)
+  tcltk::tkpack(lbl.CBCSelect,  side = "top",  expand = FALSE,  ipadx = 5,  ipady = 5,  fill = "x")
+  tcltk::tkpack(frame3,side = "bottom",expand = TRUE,fill = "both")
+  tcltk::tkpack(frame1,side = "left",expand = TRUE,fill = "both")
+  rBtnVal1 = tcltk::tclVar(trimws(CBCterms[[1]]))
 
   # create 1 columns of CBCterms radioButtons
   btns.f1 = vector()
   for (num in seq(1, length(CBCterms))) {
-    btn <- tk2radiobutton(frame1)
-    tkconfigure(btn, variable = rBtnVal1, value = num)
-    tkgrid(tk2label(frame1, text = trimws(CBCterms[[num]])),btn,padx = 10,pady =  5)
+    btn <- tcltk2::tk2radiobutton(frame1)
+    tcltk::tkconfigure(btn, variable = rBtnVal1, value = num)
+    tcltk::tkgrid(tcltk2::tk2label(frame1, text = trimws(CBCterms[[num]])),btn,padx = 10,pady =  5)
     btns.f1 = append(btns.f1, btn)
   }
 
-  tkgrid(tk2button(frame3,text ="Cancel",width = -6,command = fnCncl),
-         tk2button(frame3,text ="OK",    width = -6,command = fnOK  ), padx = 10,pady = c(5, 15))
-  tkbind(win2, "<Return>", fnOK)
+  tcltk::tkgrid(tcltk2::tk2button(frame3,text ="Cancel",width = -6,command = fnCncl),
+         tcltk2::tk2button(frame3,text ="OK",    width = -6,command = fnOK  ),
+         padx = 10,pady = c(5, 15))
+  tcltk::tkbind(win2, "<Return>", fnOK)
 
-  tkraise(win2)
-  tkwait.variable(done)
-  tkdestroy(win2)
-  if (tclvalue(done) != 1) {
+  tcltk::tkraise(win2)
+  tcltk::tkwait.variable(done)
+  tcltk::tkdestroy(win2)
+  if (tcltk::tclvalue(done) != 1) {
     exit("User canceled Model Selection")
   }
-  n1  <- as.integer((tclvalue(rBtnVal1)))
+  n1  <- as.integer((tcltk::tclvalue(rBtnVal1)))
   return(list(n1=n1))
+}
+#' @title Select Stress Period Range
+#' @description Accept a string defining range of integers vals which are reformed as a unique sequence
+#' @export
+
+readRange <- function() {
+  requireNamespace("tcltk2")
+  requireNamespace("tcltk")
+  winB <- tcltk::tktoplevel()
+  msg = paste("Total Number Stress Periods Available=", TtlStrPd,
+              "\n\nChoose Range or Periods of interest \n i.e.: 1:3,5,7:100,200 \n")
+
+  lbl.msg <- tcltk2::tk2label(winB, text = msg, font = fontHeading)
+  tcltk::tkgrid(lbl.msg, padx = 30)
+  tcltk::tkraise(winB)
+  entryInit=""
+  btn.OK <- tcltk2::tk2button(winB,text = "OK",width = -6,command = fnOK)
+  btn.Cncl <- tcltk2::tk2button(winB,text = "Cancel",width = -6,command = fnCncl)
+  rangeVarTcl <- tcltk::tclVar(paste(entryInit))
+  textEntryWidget <- tcltk2::tk2entry(winB, width = 35, textvariable = rangeVarTcl)
+  tcltk::tkgrid(tcltk::tklabel(winB, text = "Range of values",font = fontHeading),
+         textEntryWidget, btn.OK,btn.Cncl,padx = 10, pady = 5)
+  tcltk::tkbind(winB, "<Return>", fnOK)
+  tcltk::tkraise(winB)
+  tcltk::tkwait.variable(done)
+  tcltk::tkdestroy(winB)
+  if (tcltk::tclvalue(done) != 1) {
+    exit("User canceled Model Selection")
+  }
+  #  Convert string of numeric vals to a range
+  rngStr <-tcltk::tclvalue(rangeVarTcl)
+  rngStr <- gsub(" ", ",", rngStr)
+  rngStr <- gsub(",,", ",", rngStr)
+
+  df <- as.vector(rngStr)
+  rng <-
+    sapply(df, function(x)
+      dget(textConnection(paste('c(', x, ')'))))
+  rng <- unique(sort(rng))
+  return(rng)
 }

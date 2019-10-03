@@ -7,7 +7,7 @@
 readHeadsHeader(filPtr)
 }
 \arguments{
-\item{fileptr}{file pointer}
+\item{filPtr}{file pointer}
 }
 \value{
 \code{header} as a list c(KSTP,KPER,PERTIM,TOTTIM,TEXT,NC,NR,K)

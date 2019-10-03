@@ -7,7 +7,7 @@
 readCBCHeader(filPtr)
 }
 \arguments{
-\item{fileptr}{file pointer}
+\item{filPtr}{file pointer}
 }
 \value{
 \code{header} as a list c(KSTP,KPER,TEXT,NC,NR,K)

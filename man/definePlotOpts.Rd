@@ -13,6 +13,3 @@ list(matrixSource=matrixSrc, printingOn=printingOn, printAnnualOn=printAnnualOn,
 \description{
 \code{definePlotOpts} provides radio and checkboxes for Ploting options
 }
-\examples{
-
-}

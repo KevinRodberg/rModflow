@@ -6,6 +6,9 @@
 \usage{
 chooseDataSource(matrixSource)
 }
+\arguments{
+\item{matrixSource}{defines source of data}
+}
 \value{
 list(Array3D=Array3D,rasType=rasTyp))
 }

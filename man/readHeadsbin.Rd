@@ -7,7 +7,9 @@
 readHeadsbin(filPtr, SP_rng)
 }
 \arguments{
-\item{filPtr, }{SP_rng [stress period range]}
+\item{filPtr}{file pointer}
+
+\item{SP_rng}{[stress period range]}
 }
 \value{
 bigVector

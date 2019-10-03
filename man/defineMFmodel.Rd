@@ -12,8 +12,3 @@ MFmodel.Params Data.frame providing model characteristics
 \description{
 \code{defineMFmodel} defines several SFWMD Modflow Models characteristics
 }
-\examples{
-     MFmodel.Params <- defineMFmodel()
-     model <- chooseModel()
-     M <- as.data.frame(MFmodel.Params[model,])
-}

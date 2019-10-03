@@ -6,19 +6,24 @@
 \usage{
 readgridPoints(Modelgrd.Path, Model.Shape)
 }
+\arguments{
+\item{Modelgrd.Path}{Path to model mesh shapefile}
+
+\item{Model.Shape}{Name of model mesh shapefile without .shp extension}
+}
 \value{
 ModelGridCoords Data.frame providing model row, column and coordinates
 }
 \description{
-\code{defineMFmodel} Reads arcGIS shape file of model mesh
+\code{readgridPoints} Reads arcGIS shape file of model mesh
    -Converts mesh polygons to points referencing the center of the model cells
    -Changes spatial reference if necessary
    -Converts point coordinates into a data frame
 }
 \examples{
-     ModelGridCoords<-readgridPoints(Modelgrd.Path,Model.Shape)
-
-     ---Using futures:
-     g <- future({readgridPoints(Modelgrd.Path,Model.Shape)})
-     ModelGridCoords <-future::value(g)
+     Modelgrd.Path <- '//ad.sfwmd.gov/dfsroot/data/wsd/GIS/GISP_2012/DataLib/ModelData/LWCSIM'
+     Model.Shape <- 'LWCSIM_mesh'
+\dontrun{
+     ModelGridCoords \%<-\% readgridPoints(Modelgrd.Path,Model.Shape)
+     }
 }

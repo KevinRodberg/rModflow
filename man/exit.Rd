@@ -6,12 +6,12 @@
 \usage{
 exit(msg)
 }
+\arguments{
+\item{msg}{Message to display on exit}
+}
 \value{
 \code{msg} Displays message on exit
 }
 \description{
 \code{exit} Provides Function to exit a little more nicely
-}
-\examples{
-     exit("abnormal termination")
 }

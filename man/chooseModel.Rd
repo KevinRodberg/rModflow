@@ -18,5 +18,5 @@ chooseModel()
      MFmodel.Params <- defineMFmodel()
      model <- chooseModel()
      M <- as.data.frame(MFmodel.Params[model,])
-     fontHeading is defined with [family = "Arial",size = 24,weight = "bold",slant = "italic"]
+     font = fontHeading
 }

@@ -7,7 +7,11 @@
 readHeadsbinByLay(to.Read, selectLayer, maxSP)
 }
 \arguments{
-\item{filPtr, }{selectLayer}
+\item{to.Read}{name of file to assign to file pointer}
+
+\item{selectLayer}{selected layer to process}
+
+\item{maxSP}{maximum Stress period ot process}
 }
 \value{
 bigVector

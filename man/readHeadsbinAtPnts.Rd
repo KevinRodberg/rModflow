@@ -7,7 +7,11 @@
 readHeadsbinAtPnts(filPtr, SP_rng, PointVector)
 }
 \arguments{
-\item{filPtr, }{SP_rng, PointVector}
+\item{filPtr}{file pointer}
+
+\item{SP_rng}{range of stress periods}
+
+\item{PointVector}{List of points}
 }
 \value{
 listOfPnts [with values for stress period range]

@@ -7,7 +7,7 @@
 listBinHeaders(filPtr)
 }
 \arguments{
-\item{fileptr}{file pointer}
+\item{filPtr}{file pointer}
 }
 \value{
 CBCTermSet as list c(firstHeader$TEXT,firstHeader$K,firstHeader$NR,firstHeader$NC,CBCterms)
