@@ -9,22 +9,29 @@ utils::globalVariables(c("fontHeading","fnCncl","fnOK","done",
 #' @export
 
 defineMFmodel <- function() {
-  MFmodel = c('ECFTX', 'NPALM', 'LWCSIM','ECFM')
-  res = c(1250, 704, 1000, 2400)
-  xmin = c(24352.000, 680961.000, 218436.000, 565465.000)
-  ymin = c(983097.000, 840454.000, 441788.000, -44448.000)
-  nlays = c(11,3,9,7)
-  nrows = c(603, 292, 553, 552)
-  ncols = c(740, 408, 512, 236)
-  startYr = c(1999, 1965, 1999, 1989)
-  freq = c('Month', 'Month', 'Month','Month')
-  nsp = c(192, 14975, 192, 288)
+  MFmodel = c('ECFTX', 'NPALM', 'LWCSIM','ECFM','WCFM')
+  NSP=288
+  NCOL=236
+  NROW=552
+  NLAY=7
+
+  res = c(1250, 704, 1000, 2400, 2400)
+  xmin = c(24352.000, 680961.000, 218436.000, 565465.000, 20665.000)
+  ymin = c(983097.000, 840454.000, 441788.000, -44448.000, -44448.000)
+  nlays = c(11,3,9,7,7)
+  nrows = c(603, 292, 553, 552, 552)
+  ncols = c(740, 408, 512, 236, 236)
+  startYr = c(1999, 1965, 1999, 1989, 1989)
+  freq = c('Month', 'Daily', 'Month','Month','Month')
+  nsp = c(192, 14975, 192, 288, 288)
+  code = c('MF2005-NWT', 'MF2000', 'MF2005', 'SEAWAT-2000','MODFLOW6')
   mpath =c("//whqhpc01p/hpcc_shared/dbandara/CFWI/ECFTX/Model/Transient/*.*",
            "//whqhpc01p/hpcc_shared/jgidding/LECSR/LOX18/*.*",
            "//ad.sfwmd.gov/dfsroot/data/wsd/MOD/LWCSASIAS/model/*.*",
-           "//ad.sfwmd.gov/dfsroot/data/wsd/MOD/ECFM/MB/*.*")
+           "//ad.sfwmd.gov/dfsroot/data/wsd/MOD/ECFM/MB/*.*",
+           "//whqhpc01p/hpcc_shared/jgidding/WCFM/SENS/ORG2/*.*")
   MFmodel.Params <-
-    data.frame(MFmodel, res, xmin, ymin, nlays,nrows, ncols, nsp, startYr,freq,mpath)
+    data.frame(MFmodel, res, xmin, ymin, nlays,nrows, ncols, nsp, startYr,code,freq,mpath)
   rownames(MFmodel.Params) <- MFmodel.Params$MFmodel
   return(MFmodel.Params)
 }
@@ -122,7 +129,7 @@ chooseModel <- function() {
 #' @import rgdal
 #' @import sp
 #' @export
-#' @examples
+  #' @examples
 #'      Modelgrd.Path <- '//ad.sfwmd.gov/dfsroot/data/wsd/GIS/GISP_2012/DataLib/ModelData/LWCSIM'
 #'      Model.Shape <- 'LWCSIM_mesh'
 #' \dontrun{
@@ -389,6 +396,7 @@ listBinHeaders <- function(filPtr) {
     exit(paste("Invalid data in Header record.  Possibly non Binary datafile:",
                summary(filPtr)$description))
   }
+
   kntFloats <- firstHeader$K * firstHeader$NR * firstHeader$NC
   cbcBlock <- readBin(filPtr, double(), n = kntFloats, size = 4)
   iknt <- 1
@@ -443,44 +451,40 @@ readCBCbinByTerm <- function(filPtr, term, SP_rng, lay) {
   strt<-1+((lay-1)*Lay1floats)
   end <- lay*Lay1floats
   i <- 1
-  cat(paste("0%.."))
-  if (HeaderRead$TEXT == term  &&
-      is.element(HeaderRead$KPER, SP_rng &&
-                 HeaderRead$KPER <= max(SP_rng))) {
-    bigVector <- c(bigVector , cbcBlock)
-    i <- i + 1
-  } else{
-    repeat {
-      thisHeader <- readCBCHeader(filPtr)
-      # Don't read past EOF
-      if (length(thisHeader) > 0) {
-        if (term ==thisHeader$TEXT   &&
-            is.element(thisHeader$KPER, SP_rng) &&
-            thisHeader$KPER <= max(SP_rng)) {
-          i <- i + 1
-          cbcBlock <-
-            readBin(filPtr, double(), n = kntFloats, size = 4)
+  seek(filPtr,0,origin='start')
+  #cat(paste("0%.."))
 
-          bigVector <- c(bigVector, cbcBlock[strt:end])
-          # bigVector <- c(bigVector, cbcBlock[1:Lay1floats])
-        } else {
-          seek(filPtr, (kntFloats * 4), origin = 'current')
-        }
-      }
-      # don't read everything unless necessary
-      if (length(thisHeader) == 0) {
-        cat('\n')
-        break
-      }
+  repeat {
+    thisHeader <- readCBCHeader(filPtr)
+    # Don't read past EOF
+    if (length(thisHeader) > 0) {
+      if (term ==thisHeader$TEXT   &&
+          is.element(thisHeader$KPER, SP_rng) &&
+          thisHeader$KPER <= max(SP_rng)) {
+        i <- i + 1
+        cbcBlock <-
+          readBin(filPtr, double(), n = kntFloats, size = 4)
 
-      if (thisHeader$KPER > max(SP_rng)) {
-        cat('\n')
-        break
+        bigVector <- c(bigVector, cbcBlock[strt:end])
+        # bigVector <- c(bigVector, cbcBlock[1:Lay1floats])
+      } else {
+        seek(filPtr, (kntFloats * 4), origin = 'current')
       }
-      # Display % complete
-      cat(paste('\r',format(as.numeric(thisHeader$KPER) / max(SP_rng) * 100,digits = 2,nsmall = 2),"%"))
     }
+    # don't read everything unless necessary
+    if (length(thisHeader) == 0) {
+      #cat('\n')
+      break
+    }
+
+    if (thisHeader$KPER > max(SP_rng)) {
+      #cat('\n')
+      break
+    }
+    # Display % complete
+    #cat(paste('\r',format(as.numeric(thisHeader$KPER) / max(SP_rng) * 100,digits = 2,nsmall = 2),"%"))
   }
+  # }
   close(filPtr)
   return(bigVector)
 }
