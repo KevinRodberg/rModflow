@@ -4,16 +4,16 @@
 \alias{readCBCbinByTerm}
 \title{Read budget term by layer}
 \usage{
-readCBCbinByTerm(cbbFile, term, SP_rng, lay)
+readCBCbinByTerm(filPtr, term, SP_rng, lay)
 }
 \arguments{
-\item{cbbFile}{filename to be referenced by file pointer filPtr}
-
 \item{term}{Modflow budget term}
 
 \item{SP_rng}{Stress Period range}
 
 \item{lay}{layer to read}
+
+\item{cbbFile}{filename to be referenced by file pointer filPtr}
 }
 \value{
 bigVector
