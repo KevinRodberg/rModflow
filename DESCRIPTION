@@ -1,7 +1,7 @@
 Package: rModflow
 Type: Package
 Title: Tools to Process Modflow Data
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(person("Kevin","Rodberg",email="krodberg@sfwmd.gov", role = c("aut", "cre")))
 Description: Manipulate Modflow binary data.
 License: GPL-3
